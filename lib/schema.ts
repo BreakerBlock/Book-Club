@@ -115,3 +115,9 @@ export const photosRel = relations(eventPhotos, ({ one }) => ({ event: one(event
 export const rsvpsRel = relations(rsvps, ({ one }) => ({ event: one(events, { fields: [rsvps.eventId], references: [events.id] }), member: one(members, { fields: [rsvps.memberId], references: [members.id] }) }));
 
 export type Book = typeof books.$inferSelect;
+
+/** Shop settings editable from the staff desk (store name, staff password hash). */
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+});

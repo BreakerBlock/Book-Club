@@ -4,13 +4,15 @@ import { db, pitches, events, books, availability, members as membersT, readingL
 import { currentMember } from "@/lib/session";
 import { trending } from "@/lib/insights";
 import { Cover } from "@/components/Cover";
-import { STORE_NAME, dateTime } from "@/lib/format";
+import { dateTime } from "@/lib/format";
+import { storeName } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
+  const STORE_NAME = await storeName();
   const [me, pick, topPitch, nextSession, arrivals, hot, bestDay, [{ members }], [{ reading }]] = await Promise.all([
     currentMember(),
     db.query.pitches.findFirst({ where: eq(pitches.status, "SELECTED"), orderBy: desc(pitches.createdAt), with: { member: true } }),

@@ -1,10 +1,13 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { createHmac, timingSafeEqual } from "crypto";
+import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { eq } from "drizzle-orm";
 import { db, members } from "./db";
+import { databaseUrl } from "./dburl";
 
-const SECRET = process.env.SESSION_SECRET || "dev-only-secret-change-me";
+// SESSION_SECRET if set; otherwise derived from the database password, which is already secret.
+const SECRET = process.env.SESSION_SECRET
+  || createHash("sha256").update("bookclub-session:" + (databaseUrl() ?? "dev-only")).digest("base64url");
 const MEMBER = "bc_member";
 const ADMIN = "bc_admin";
 const YEAR = 60 * 60 * 24 * 365;

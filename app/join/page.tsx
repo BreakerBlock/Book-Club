@@ -1,11 +1,12 @@
 import { ActionForm, Submit } from "@/components/ActionForm";
 import { join } from "@/lib/actions";
-import { STORE_NAME } from "@/lib/format";
+import { storeName } from "@/lib/settings";
 
 export const metadata = { title: "Join the club" };
 
 export default async function Join({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next = "/" } = await searchParams;
+  const STORE_NAME = await storeName();
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
   return (
     <div style={{ maxWidth: 460, margin: "0 auto" }}>

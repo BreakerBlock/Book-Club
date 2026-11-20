@@ -1,8 +1,11 @@
 import { defineConfig } from "drizzle-kit";
+import { databaseUrl } from "./lib/dburl";
+
+try { process.loadEnvFile(".env"); } catch { /* optional */ }
 
 export default defineConfig({
   schema: "./lib/schema.ts",
   out: "./db/migrations",
   dialect: "postgresql",
-  dbCredentials: { url: process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL! },
+  dbCredentials: { url: databaseUrl(true)! },
 });

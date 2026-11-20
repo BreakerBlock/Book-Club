@@ -2,13 +2,17 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
+import { databaseUrl, sslFor } from "../lib/dburl";
 
-const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
+try { process.loadEnvFile(".env"); } catch { /* no local .env — fine on Vercel */ }
+
+const url = databaseUrl(true);
 if (!url) {
-  console.warn("No DATABASE_URL — skipping migrations.");
+  console.warn("No database connection string found — skipping migrations. Connect a Postgres database in Vercel → Storage.");
   process.exit(0);
 }
-const pool = new Pool({ connectionString: url, ssl: /localhost|127\.0\.0\.1/.test(url) ? undefined : { rejectUnauthorized: false } });
+const pool = new Pool({ connectionString: url, ssl: sslFor(url) });
 migrate(drizzle(pool), { migrationsFolder: "db/migrations" })
   .then(() => console.log("Database is up to date."))
+  .catch((e) => { console.error("Migration failed:", e); process.exitCode = 1; })
   .finally(() => pool.end());

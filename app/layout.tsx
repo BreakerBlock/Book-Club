@@ -5,12 +5,13 @@ import Link from "next/link";
 import "./globals.css";
 import { currentMember, isAdmin } from "@/lib/session";
 import { leave } from "@/lib/actions";
-import { STORE_NAME, initials } from "@/lib/format";
+import { initials } from "@/lib/format";
+import { storeName } from "@/lib/settings";
 
-export const metadata: Metadata = {
-  title: { default: `${STORE_NAME} · Book Club`, template: `%s · ${STORE_NAME}` },
-  description: `Book club, events and shelves at ${STORE_NAME}.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const name = await storeName();
+  return { title: { default: `${name} · Book Club`, template: `%s · ${name}` }, description: `Book club, events and shelves at ${name}.` };
+}
 
 const NAV = [
   ["/availability", "Availability"],
@@ -25,7 +26,7 @@ const NAV = [
 ] as const;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [me, admin] = await Promise.all([currentMember(), isAdmin()]);
+  const [me, admin, STORE_NAME] = await Promise.all([currentMember(), isAdmin(), storeName()]);
   return (
     <html lang="en">
       <body>

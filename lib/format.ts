@@ -1,4 +1,3 @@
-export const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || "Lantern Lane Books";
 export const CURRENCY = process.env.NEXT_PUBLIC_CURRENCY || "INR";
 export const TZ = process.env.NEXT_PUBLIC_TIMEZONE || "Asia/Kolkata";
 

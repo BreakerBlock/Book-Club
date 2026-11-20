@@ -31,55 +31,32 @@ Each pick shows the reason it was chosen. New members with no log see club favou
 
 ## Sign-in model
 - **Members** join with name + email (no password). A signed cookie keeps them in for a year. Set `CLUB_JOIN_CODE` so only people who got the code at the counter can join.
-- **Staff** sign in at `/admin/login` with `ADMIN_PASSWORD`.
+- **Staff**: the first time anyone opens `/admin/login`, it asks them to choose the staff password (stored hashed in the database). After that it's a normal login. Change it any time under *Shop settings* on the staff desk. Setting an `ADMIN_PASSWORD` env var overrides this.
 
-This is deliberately simple for a small club. Anyone who knows a member's email *and* the club code could sign in as them — if that matters, add email magic-link login (e.g. Auth.js + Resend) later.
+Anyone who knows a member's email *and* the club code could sign in as them — if that matters, add email magic-link login (e.g. Auth.js + Resend) later.
 
 ---
 
 ## Deploy (GitHub + Vercel)
 
-1. **Push to GitHub**
-   ```bash
-   git init && git add . && git commit -m "Bookstore club site"
-   git branch -M main
-   git remote add origin https://github.com/<you>/<repo>.git
-   git push -u origin main
-   ```
+1. Import this GitHub repo in Vercel (*Add New → Project*).
+2. *Storage → Create → Neon (Postgres)* and connect it to the project. Any variable prefix works — the app finds the connection string itself.
+3. Deploy (or *Redeploy* if it was already deployed). Each build creates/updates the database tables first; the build log shows **"Database is up to date."**
+4. **Straight away**, open `https://<your-site>/admin/login` and choose the staff password — the first person to open that page sets it.
+5. On the staff desk → *Shop settings*: set the shop's name, and (for a demo) type `LOAD DEMO` to load 30 books, 10 members, events, pitches and reviews. ⚠ Loading demo data replaces all club data — don't use it once the shop is live.
 
-2. **Import on Vercel** – vercel.com → *Add New → Project* → pick the repo. Don't deploy yet.
+Optional:
+- *Storage → Blob* → connect, for direct photo uploads (otherwise staff paste image links).
+- Environment variables: `CLUB_JOIN_CODE`, `NEXT_PUBLIC_CURRENCY` (default `INR`), `NEXT_PUBLIC_TIMEZONE` (default `Asia/Kolkata`) with matching `EVENT_UTC_OFFSET` (default `+05:30`), `SESSION_SECRET` (otherwise derived from the database credentials).
 
-3. **Add the database** – in the project: *Storage → Create → Neon (Postgres)* → connect it to the project. This sets `DATABASE_URL` and `DATABASE_URL_UNPOOLED` for you.
-
-4. **Add photo storage (optional)** – *Storage → Create → Blob* → connect. This sets `BLOB_READ_WRITE_TOKEN`. Without it, staff can still add photos by pasting an image link.
-
-5. **Environment variables** – *Settings → Environment Variables*:
-   | Name | Value |
-   |------|-------|
-   | `SESSION_SECRET` | output of `openssl rand -base64 32` |
-   | `ADMIN_PASSWORD` | staff password |
-   | `CLUB_JOIN_CODE` | optional code for members |
-   | `NEXT_PUBLIC_STORE_NAME` | the shop's name |
-   | `NEXT_PUBLIC_CURRENCY` | `INR` (or `USD`, `GBP`…) |
-   | `NEXT_PUBLIC_TIMEZONE` | `Asia/Kolkata` |
-   | `EVENT_UTC_OFFSET` | `+05:30` (must match the timezone) |
-
-6. **Deploy.** Every build runs `npm run db:migrate` first, so tables are created/updated automatically.
-
-7. **Load demo data (optional, for the pitch meeting)**
-   ```bash
-   npm i -g vercel && vercel link && vercel env pull .env
-   npm install
-   npm run db:seed      # ⚠ wipes club data and loads 30 books, 10 members, events, pitches, logs
-   ```
-   Seeded members, reviews and event photos are invented samples; book titles and prize results are real. Don't run the seed once the shop is live.
+Demo members, reviews and event photos are invented samples; book titles and prize results are real.
 
 ## Local development
 ```bash
 cp .env.example .env          # point DATABASE_URL at any Postgres
 npm install
 npm run db:migrate
-npm run db:seed               # optional
+npm run db:seed               # optional demo data (wipes club data)
 npm run dev                   # http://localhost:3000
 ```
 

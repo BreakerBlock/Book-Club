@@ -6,6 +6,8 @@ import { put } from "@vercel/blob";
 import { and, eq, sql } from "drizzle-orm";
 import { db, members, availability, pitches, votes, books, events, eventPhotos, rsvps, prizes, readingLogs } from "./db";
 import { setMember, clearMember, requireMember, setAdmin, clearAdmin, requireAdmin, currentMember, isAdmin } from "./session";
+import { checkStaffPassword, hashPassword, setSetting, staffPasswordMode } from "./settings";
+import { loadDemo } from "./demo";
 
 export type Result = { ok?: string; error?: string } | null;
 
@@ -38,11 +40,52 @@ export async function leave() {
 }
 
 export async function adminLogin(_: Result, f: FormData): Promise<Result> {
-  const pw = process.env.ADMIN_PASSWORD;
-  if (!pw) return { error: "ADMIN_PASSWORD is not set on the server." };
-  if (str(f, "password") !== pw) return { error: "Wrong password." };
+  if (!(await checkStaffPassword(str(f, "password")))) return { error: "Wrong password." };
   await setAdmin();
   redirect("/admin");
+}
+
+/** First run only: when no staff password exists yet, the first person here chooses it. */
+export async function adminSetup(_: Result, f: FormData): Promise<Result> {
+  if ((await staffPasswordMode()) !== "unset") return { error: "A staff password is already set — sign in instead." };
+  const pw = str(f, "password", 200);
+  if (pw.length < 8) return { error: "Use at least 8 characters." };
+  if (pw !== str(f, "confirm", 200)) return { error: "The two passwords don't match." };
+  await setSetting("admin_hash", hashPassword(pw));
+  await setAdmin();
+  redirect("/admin");
+}
+
+export async function changeStaffPassword(_: Result, f: FormData): Promise<Result> {
+  try {
+    await requireAdmin();
+    if (process.env.ADMIN_PASSWORD) return { error: "The password is set by ADMIN_PASSWORD in Vercel — change it there." };
+    const pw = str(f, "password", 200);
+    if (pw.length < 8) return { error: "Use at least 8 characters." };
+    await setSetting("admin_hash", hashPassword(pw));
+    return { ok: "Staff password changed." };
+  } catch (e) { return fail(e); }
+}
+
+export async function saveShop(_: Result, f: FormData): Promise<Result> {
+  try {
+    await requireAdmin();
+    const name = str(f, "storeName", 80);
+    if (!name) return { error: "Give the shop a name." };
+    await setSetting("store_name", name);
+    revalidatePath("/", "layout");
+    return { ok: "Shop name saved." };
+  } catch (e) { return fail(e); }
+}
+
+export async function loadDemoData(_: Result, f: FormData): Promise<Result> {
+  try {
+    await requireAdmin();
+    if (str(f, "confirm").toUpperCase() !== "LOAD DEMO") return { error: "Type LOAD DEMO to confirm — this replaces all club data." };
+    const n = await loadDemo(db);
+    revalidatePath("/", "layout");
+    return { ok: `Loaded ${n.books} books, ${n.members} members and ${n.events} events.` };
+  } catch (e) { return fail(e); }
 }
 
 export async function adminLogout() {

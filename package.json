@@ -7,8 +7,8 @@
     "build": "npm run db:migrate && next build",
     "start": "next start",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx --env-file-if-exists=.env db/migrate.ts",
-    "db:seed": "tsx --env-file-if-exists=.env db/seed.ts",
+    "db:migrate": "tsx db/migrate.ts",
+    "db:seed": "tsx db/seed.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

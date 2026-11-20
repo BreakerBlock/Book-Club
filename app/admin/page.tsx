@@ -4,7 +4,8 @@ import { asc, count, desc, eq, lte, sum } from "drizzle-orm";
 import { db, books, events, members as membersT } from "@/lib/db";
 import { isAdmin } from "@/lib/session";
 import { ActionForm, Submit } from "@/components/ActionForm";
-import { saveBook, saveEvent, addPhotos, addPrize, adminLogout, deleteEvent } from "@/lib/actions";
+import { saveBook, saveEvent, addPhotos, addPrize, adminLogout, deleteEvent, saveShop, changeStaffPassword, loadDemoData } from "@/lib/actions";
+import { storeName } from "@/lib/settings";
 import { dateTime } from "@/lib/format";
 
 export const metadata = { title: "Staff desk" };
@@ -13,7 +14,8 @@ export const dynamic = "force-dynamic";
 export default async function Admin({ searchParams }: { searchParams: Promise<{ edit?: string }> }) {
   if (!(await isAdmin())) redirect("/admin/login");
   const { edit } = await searchParams;
-  const [book, bookList, eventList, [{ members }], [{ stock }], [{ low }]] = await Promise.all([
+  const [name, book, bookList, eventList, [{ members }], [{ stock }], [{ low }]] = await Promise.all([
+    storeName(),
     edit ? db.query.books.findFirst({ where: eq(books.id, edit) }) : null,
     db.select({ id: books.id, title: books.title, author: books.author }).from(books).orderBy(asc(books.title)),
     db.query.events.findMany({ orderBy: desc(events.startsAt), with: { rsvps: { columns: { id: true } }, photos: { columns: { id: true } } } }),
@@ -28,6 +30,27 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
         <div><h1>Staff desk</h1><p>{members} members · {stock ?? 0} books in stock · {low} titles running low</p></div>
         <form action={adminLogout}><button className="btn ghost small">Sign out of staff</button></form>
       </div>
+
+      <section className="card" style={{ marginBottom: 28 }}>
+        <h2>Shop settings</h2>
+        <div className="grid">
+          <ActionForm action={saveShop} resetOnOk={false}>
+            <label>Shop name<input name="storeName" defaultValue={name} required /></label>
+            <Submit>Save name</Submit>
+          </ActionForm>
+          {!process.env.ADMIN_PASSWORD && (
+            <ActionForm action={changeStaffPassword}>
+              <label>New staff password<input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
+              <Submit>Change password</Submit>
+            </ActionForm>
+          )}
+          <ActionForm action={loadDemoData}>
+            <label>Demo data <span className="soft small">— replaces ALL books, members, events and logs with samples</span>
+              <input name="confirm" placeholder="Type LOAD DEMO" autoComplete="off" required /></label>
+            <Submit className="btn quiet">Load demo data</Submit>
+          </ActionForm>
+        </div>
+      </section>
 
       <div className="split">
         <section className="card" id="book">

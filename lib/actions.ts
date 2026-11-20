@@ -3,11 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { put } from "@vercel/blob";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { db, members, availability, pitches, votes, books, events, eventPhotos, rsvps, prizes, readingLogs } from "./db";
 import { setMember, clearMember, requireMember, setAdmin, clearAdmin, requireAdmin, currentMember, isAdmin } from "./session";
 import { checkStaffPassword, hashPassword, setSetting, staffPasswordMode } from "./settings";
 import { loadDemo } from "./demo";
+import { findCover, fillMissingCovers } from "./covers";
 
 export type Result = { ok?: string; error?: string } | null;
 
@@ -83,6 +84,7 @@ export async function loadDemoData(_: Result, f: FormData): Promise<Result> {
     await requireAdmin();
     if (str(f, "confirm").toUpperCase() !== "LOAD DEMO") return { error: "Type LOAD DEMO to confirm — this replaces all club data." };
     const n = await loadDemo(db);
+    await fillMissingCovers(db);
     revalidatePath("/", "layout");
     return { ok: `Loaded ${n.books} books, ${n.members} members and ${n.events} events.` };
   } catch (e) { return fail(e); }
@@ -111,7 +113,7 @@ export async function createPitch(_: Result, f: FormData): Promise<Result> {
     const m = await requireMember();
     const title = str(f, "title", 160), author = str(f, "author", 120), reason = str(f, "reason", 1200);
     if (!title || !author || reason.length < 20) return { error: "Add a title, author and at least a couple of sentences on why." };
-    await db.insert(pitches).values({ title, author, reason, genre: str(f, "genre", 40), memberId: m.id });
+    await db.insert(pitches).values({ title, author, reason, genre: str(f, "genre", 40), memberId: m.id, coverUrl: await findCover(title, author) });
     refresh("/pitches");
     return { ok: "Pitch posted — now get people voting." };
   } catch (e) { return fail(e); }
@@ -156,6 +158,7 @@ export async function saveBook(_: Result, f: FormData): Promise<Result> {
       coverUrl: /^https:\/\//.test(cover) ? cover : null,
     };
     if (!data.title || !data.author) return { error: "Title and author are required." };
+    if (!data.coverUrl) data.coverUrl = await findCover(data.title, data.author);
     if (id) await db.update(books).set(data).where(eq(books.id, id));
     else await db.insert(books).values(data);
     refresh("/inventory", "/new-arrivals", "/");
@@ -187,6 +190,7 @@ export async function saveEvent(_: Result, f: FormData): Promise<Result> {
       title: str(f, "title", 160), description: str(f, "description", 3000),
       kind: str(f, "kind") === "SESSION" ? "SESSION" : "EVENT",
       startsAt, location: str(f, "location", 120) || "In store", capacity: int(f, "capacity"),
+      imageUrl: /^https:\/\//.test(str(f, "imageUrl")) ? str(f, "imageUrl", 500) : null,
     });
     refresh("/events", "/sessions", "/", "/admin");
     return { ok: "Saved." };
@@ -219,6 +223,7 @@ export async function addPhotos(_: Result, f: FormData): Promise<Result> {
     if (/^https:\/\//.test(pasted)) urls.push(pasted);
     if (!urls.length) return { error: "Choose photos or paste an https image link." };
     await db.insert(eventPhotos).values(urls.map((url) => ({ url, caption, eventId })));
+    await db.update(events).set({ imageUrl: urls[0] }).where(and(eq(events.id, eventId), isNull(events.imageUrl)));
     refresh(`/events/${eventId}`, "/events");
     return { ok: `${urls.length} photo${urls.length > 1 ? "s" : ""} added.` };
   } catch (e) { return fail(e); }

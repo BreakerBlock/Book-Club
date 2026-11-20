@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { PHOTOS } from "@/lib/demo";
 import { and, count, gte, lte } from "drizzle-orm";
 import { db, availability, members as membersT } from "@/lib/db";
 import { currentMember } from "@/lib/session";
 import { toggleDay } from "@/lib/actions";
-import { JoinPrompt } from "@/components/Cover";
+import { JoinPrompt, PageHead } from "@/components/ui";
 import { initials } from "@/lib/format";
 
 export const metadata = { title: "Availability" };
@@ -50,12 +51,7 @@ export default async function Availability({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <div className="head">
-        <div>
-          <h1>When can everyone meet?</h1>
-          <p>Tap the days you&rsquo;re free. The darker the day, the more members can make it — the ringed day has the most.</p>
-        </div>
-      </div>
+      <PageHead image={PHOTOS.tableTalk} title="When can everyone meet?" sub="Tap the days you’re free. The darker the day, the more members can make it — the ringed day has the most." />
 
       <div className="split">
         <section className="card">

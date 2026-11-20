@@ -1,9 +1,11 @@
 import { desc, eq, ne } from "drizzle-orm";
+import { PHOTOS } from "@/lib/demo";
 import { db, pitches as pitchesT } from "@/lib/db";
 import { currentMember, isAdmin } from "@/lib/session";
 import { createPitch, vote, setPitchStatus, deletePitch } from "@/lib/actions";
 import { ActionForm, Submit } from "@/components/ActionForm";
-import { Cover, JoinPrompt } from "@/components/Cover";
+import { Cover } from "@/components/Cover";
+import { JoinPrompt, PageHead } from "@/components/ui";
 import { ago } from "@/lib/format";
 
 export const metadata = { title: "Book pitches" };
@@ -26,16 +28,10 @@ export default async function Pitches({ searchParams }: { searchParams: Promise<
 
   return (
     <>
-      <div className="head">
-        <div>
-          <h1>Pitch the next book</h1>
-          <p>Make your case in a few lines, then vote on everyone else&rsquo;s. The store picks the club read from the top of the board.</p>
-        </div>
-        <div className="row">
-          <a className={`btn small ${show === "past" ? "ghost" : "quiet"}`} href="/pitches">Open pitches</a>
-          <a className={`btn small ${show === "past" ? "quiet" : "ghost"}`} href="/pitches?show=past">Picked &amp; past</a>
-        </div>
-      </div>
+      <PageHead image={PHOTOS.glasses} title="Pitch the next book" sub="Make your case in a few lines, then vote on everyone else’s. The store picks the club read from the top of the board.">
+        <a className={`btn small ${show === "past" ? "ghost" : "light"}`} href="/pitches">Open pitches</a>
+        <a className={`btn small ${show === "past" ? "light" : "ghost"}`} href="/pitches?show=past">Picked &amp; past</a>
+      </PageHead>
 
       <div className="split">
         <div className="stack">
@@ -54,7 +50,7 @@ export default async function Pitches({ searchParams }: { searchParams: Promise<
               </div>
               <div>
                 <div className="book">
-                  <Cover title={p.title} author={p.author} size="sm" />
+                  <Cover title={p.title} author={p.author} url={p.coverUrl} />
                   <div>
                     <div className="row" style={{ gap: 6 }}>
                       {show !== "past" && i === 0 && p.score > 0 && <span className="pill hot">Leading</span>}

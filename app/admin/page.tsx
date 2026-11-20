@@ -91,6 +91,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                 <label>Seats<input name="capacity" type="number" min="1" placeholder="no limit" /></label>
               </div>
               <label>Where<input name="location" placeholder="In store" /></label>
+              <label>Cover photo link <span className="soft small">(optional — or upload photos below and the first becomes the cover)</span><input name="imageUrl" type="url" placeholder="https://" /></label>
               <label>Details<textarea name="description" /></label>
               <Submit>Save</Submit>
             </ActionForm>

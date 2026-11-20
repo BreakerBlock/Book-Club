@@ -1,26 +1,29 @@
 import { asc, desc } from "drizzle-orm";
-import { db, prizes as prizesT } from "@/lib/db";
+import { PHOTOS } from "@/lib/demo";
+import { db, prizes as prizesT, books, pitches } from "@/lib/db";
 import { trending } from "@/lib/insights";
-import { Cover, Stars } from "@/components/Cover";
+import { Cover } from "@/components/Cover";
+import { Stars, PageHead } from "@/components/ui";
 import { money } from "@/lib/format";
 
 export const metadata = { title: "Trending & prizes" };
 export const dynamic = "force-dynamic";
 
 export default async function Trending() {
-  const [hot, prizes] = await Promise.all([
+  const [hot, prizes, bc, pc] = await Promise.all([
     trending(10),
     db.query.prizes.findMany({ orderBy: [desc(prizesT.year), asc(prizesT.name)], with: { book: true } }),
+    db.select({ t: books.title, u: books.coverUrl }).from(books),
+    db.select({ t: pitches.title, u: pitches.coverUrl }).from(pitches),
   ]);
+  const coverOf = new Map([...pc, ...bc].filter((c) => c.u).map((c) => [c.t.toLowerCase(), c.u]));
   const top = hot[0]?.score ?? 1;
   const byPrize = new Map<string, typeof prizes>();
   for (const p of prizes) byPrize.set(p.name, [...(byPrize.get(p.name) ?? []), p]);
 
   return (
     <>
-      <div className="head">
-        <div><h1>Trending &amp; prize winners</h1><p>Trending is what club members started, finished, rated and voted for in the last 30 days.</p></div>
-      </div>
+      <PageHead image={PHOTOS.openBooks} title="Trending & prize winners" sub="Trending is what club members started, finished, rated and voted for in the last 30 days." />
       <div className="split">
         <section className="card">
           <h2>Trending in the club</h2>
@@ -28,7 +31,7 @@ export default async function Trending() {
           {hot.map((t, i) => (
             <div key={t.title} className="row" style={{ flexWrap: "nowrap", padding: "12px 0", borderTop: i ? "1px solid var(--line)" : 0 }}>
               <span className="rank">{i + 1}</span>
-              <Cover title={t.title} author={t.author} size="sm" />
+              <Cover title={t.title} author={t.author} url={coverOf.get(t.title.toLowerCase())} size="sm" />
               <div style={{ flex: 1 }}>
                 <b>{t.title}</b>
                 <div className="soft small">{t.author}</div>

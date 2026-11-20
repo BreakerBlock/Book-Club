@@ -7,6 +7,7 @@ import { RsvpBlock } from "@/components/RsvpButtons";
 import { ActionForm, Submit } from "@/components/ActionForm";
 import { addPhotos } from "@/lib/actions";
 import { dateTime } from "@/lib/format";
+import { PageHead } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -21,14 +22,9 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
   const past = e.startsAt < new Date();
   return (
     <>
-      <Link className="link small" href="/events">← All events</Link>
-      <div className="head" style={{ marginTop: 12 }}>
-        <div>
-          <span className={`pill ${e.kind === "SESSION" ? "hot" : ""}`}>{e.kind === "SESSION" ? "Club session" : "Store event"}</span>
-          <h1 style={{ marginTop: 10 }}>{e.title}</h1>
-          <p>{dateTime(e.startsAt)} · {e.location}</p>
-        </div>
-      </div>
+      <PageHead image={e.imageUrl ?? e.photos[0]?.url ?? undefined} title={e.title} sub={`${e.kind === "SESSION" ? "Club session" : "Store event"} · ${dateTime(e.startsAt)} · ${e.location}`}>
+        <Link className="btn light small" href="/events">← All events</Link>
+      </PageHead>
       <div className="split">
         <div>
           {e.description && <p style={{ whiteSpace: "pre-line" }}>{e.description}</p>}

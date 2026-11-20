@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PageHead } from "@/components/ui";
+import { PHOTOS } from "@/lib/demo";
 import { desc, gte } from "drizzle-orm";
 import { db, books as booksT } from "@/lib/db";
 import { Cover } from "@/components/Cover";
@@ -12,10 +14,9 @@ export default async function NewArrivals() {
   const books = await db.query.books.findMany({ where: gte(booksT.arrivedAt, since), orderBy: desc(booksT.arrivedAt), with: { prizes: true } });
   return (
     <>
-      <div className="head">
-        <div><h1>New in the store</h1><p>Everything that&rsquo;s landed on our shelves in the last six weeks.</p></div>
-        <Link className="btn ghost small" href="/inventory">Browse full inventory</Link>
-      </div>
+      <PageHead image={PHOTOS.bookTable} title="New in the store" sub="Everything that’s landed on our shelves in the last six weeks.">
+        <Link className="btn light" href="/inventory">Browse full inventory</Link>
+      </PageHead>
       {books.length === 0 && <p className="soft">Nothing new in the last six weeks — check back soon.</p>}
       <div className="grid">
         {books.map((b) => (

@@ -51,6 +51,7 @@ export const pitches = pgTable("pitches", {
   author: text("author").notNull(),
   genre: text("genre").notNull().default(""),
   reason: text("reason").notNull(),
+  coverUrl: text("cover_url"),
   status: pitchStatus("status").notNull().default("OPEN"),
   createdAt: created(),
   memberId: text("member_id").notNull().references(() => members.id, { onDelete: "cascade" }),
@@ -85,6 +86,7 @@ export const events = pgTable("events", {
   startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
   location: text("location").notNull().default("In store"),
   capacity: integer("capacity"),
+  imageUrl: text("image_url"),
 });
 
 export const eventPhotos = pgTable("event_photos", {

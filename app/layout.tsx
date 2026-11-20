@@ -5,6 +5,7 @@ import Link from "next/link";
 import "./globals.css";
 import { currentMember, isAdmin } from "@/lib/session";
 import { leave } from "@/lib/actions";
+import { NavLinks } from "@/components/NavLinks";
 import { initials } from "@/lib/format";
 import { storeName } from "@/lib/settings";
 import { DEMO } from "@/lib/mode";
@@ -34,7 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <header className="top">
           <div className="top-row">
             <Link href="/" className="brand">
-              <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden><path d="M4 7c4-2 8-2 12 1v18c-4-3-8-3-12-1zM28 7c-4-2-8-2-12 1v18c4-3 8-3 12-1z" fill="currentColor" opacity=".9"/></svg>
+              <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden><path d="M4 7c4-2 8-2 12 1v18c-4-3-8-3-12-1zM28 7c-4-2-8-2-12 1v18c4-3 8-3 12-1z" fill="currentColor" opacity=".9"/></svg>
               <span>{STORE_NAME}</span>
             </Link>
             <div className="who">
@@ -55,14 +56,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               )}
             </div>
           </div>
-          <nav className="nav" aria-label="Sections">
-            {NAV.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}
-          </nav>
+          <NavLinks items={NAV} />
         </header>
         <main>{children}</main>
         <footer className="foot">
-          <span>{STORE_NAME} · Book club &amp; shop floor</span>
-          <Link href={admin ? "/admin" : "/admin/login"}>{admin ? "Staff desk" : "Staff login"}</Link>
+          <div className="foot-in">
+            <div>
+              <b>{STORE_NAME}</b>
+              <p>Our reading club: pitch the next book, find a night that suits everyone, and tell us what you thought.</p>
+              <small>Event photos via Unsplash · Book covers via Open Library</small>
+            </div>
+            <div>
+              <a href="/pitches">Book pitches</a><a href="/sessions">Sessions &amp; RSVP</a><a href="/availability">Availability</a><a href="/reading">Reading log</a><a href="/for-you">Suggested for you</a>
+            </div>
+            <div>
+              <a href="/new-arrivals">New in store</a><a href="/inventory">Inventory</a><a href="/trending">Trending &amp; prizes</a><a href="/events">Events &amp; photos</a>
+              <Link href={admin ? "/admin" : "/admin/login"}>{admin ? "Staff desk" : "Staff login"}</Link>
+            </div>
+          </div>
         </footer>
       </body>
     </html>

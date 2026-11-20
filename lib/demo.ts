@@ -70,12 +70,23 @@ const REVIEWS = [
   "Gave this to my mother right after finishing it.",
 ];
 
-/** A simple illustrated placeholder photo as an SVG data URI (replace with real photos via the staff desk). */
-function scene(seed: number, label: string) {
-  const c = ["#1f3d3b", "#7a2e3a", "#3d4a7a", "#8a5a1f", "#2e5a3a"][seed % 5];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="${c}"/><rect y="200" width="400" height="100" fill="#000" opacity=".25"/>${Array.from({ length: 14 }, (_, i) => `<rect x="${20 + i * 26}" y="${60 + ((i * 37 + seed * 11) % 50)}" width="20" height="${140 - ((i * 37 + seed * 11) % 50)}" rx="2" fill="#fff" opacity="${0.15 + ((i + seed) % 4) * 0.12}"/>`).join("")}<circle cx="${90 + seed * 40}" cy="230" r="26" fill="#f5d7b8"/><circle cx="${210 + seed * 15}" cy="236" r="24" fill="#e7b98f"/><circle cx="${310 - seed * 10}" cy="232" r="25" fill="#c88b62"/><text x="20" y="285" font-family="Georgia" font-size="16" fill="#fff">${label}</text></svg>`;
-  return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
-}
+/** Free-to-use Unsplash photos (unsplash.com/license) for demo events. Replace with the shop's own from the staff desk. */
+const u = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1400&q=80`;
+export const PHOTOS = {
+  circle: u("1763896081109-ed6bf56ae955"),     // hands holding open books around a table
+  browsing: u("1764173039117-e1ef87b26ec4"),   // two women looking at a book in a library
+  shelves: u("1758796629109-4f38e9374f45"),    // bookshelves in a store
+  tableTalk: u("1460518451285-97b6aa326961"),  // two people reading and writing at a table
+  picking: u("1513475382585-d06e58bcb0e0"),    // picking a book from the shelf
+  bookTable: u("1495446815901-a7297e633e8d"),  // books laid out on a table
+  couch: u("1758876201359-1d04e01f572f"),      // woman reading on a couch, smiling
+  armchair: u("1675179181234-aa537607528b"),   // woman reading in a chair
+  coffee: u("1588666309990-d68f08e3d4a6"),     // open book, coffee and flowers
+  glasses: u("1537495329792-41ae41ad3bf0"),    // glasses on a pile of books
+  stack: u("1769963061311-293a72e5cffd"),      // stack of books, shelves behind
+  holding: u("1506880018603-83d5b814b5a6"),    // hands holding a book
+  openBooks: u("1457369804613-52c61a468e7d"),  // open books spread out
+};
 
 export async function loadDemo(db: DB) {
   for (const t of [S.rsvps, S.eventPhotos, S.events, S.votes, S.pitches, S.readingLogs, S.availability, S.prizes, S.books, S.members]) await db.delete(t);
@@ -139,10 +150,10 @@ export async function loadDemo(db: DB) {
   // Events & sessions
   const at = (offsetDays: number, hour: number) => { const d = new Date(Date.now() + offsetDays * day); d.setUTCHours(hour - 6, 30, 0, 0); return d; };
   const upcoming = [
-    { title: "Club night: Tomb of Sand, part one", kind: "SESSION" as const, startsAt: at(6, 18), capacity: 14, description: "Chapters 1–3. Chai and biscuits on us. Bring your favourite line." },
-    { title: "Silent reading hour", kind: "SESSION" as const, startsAt: at(10, 10), capacity: 20, description: "Phones away, bring any book. We read together for an hour, then talk for twenty minutes." },
-    { title: "Translation workshop", kind: "SESSION" as const, startsAt: at(17, 17), capacity: 10, description: "A hands-on hour on translating a short Hindi passage into English — no experience needed." },
-    { title: "Author reading & signing", kind: "EVENT" as const, startsAt: at(21, 18), capacity: null, description: "A local debut novelist reads from her new book, followed by Q&A and signing." },
+    { title: "Club night: Tomb of Sand, part one", kind: "SESSION" as const, imageUrl: PHOTOS.circle, startsAt: at(6, 18), capacity: 14, description: "Chapters 1–3. Chai and biscuits on us. Bring your favourite line." },
+    { title: "Silent reading hour", kind: "SESSION" as const, imageUrl: PHOTOS.armchair, startsAt: at(10, 10), capacity: 20, description: "Phones away, bring any book. We read together for an hour, then talk for twenty minutes." },
+    { title: "Translation workshop", kind: "SESSION" as const, imageUrl: PHOTOS.tableTalk, startsAt: at(17, 17), capacity: 10, description: "A hands-on hour on translating a short Hindi passage into English — no experience needed." },
+    { title: "Author reading & signing", kind: "EVENT" as const, imageUrl: PHOTOS.browsing, startsAt: at(21, 18), capacity: null, description: "A local debut novelist reads from her new book, followed by Q&A and signing." },
   ];
   const created = await db.insert(S.events).values(upcoming).returning();
   const rs: (typeof S.rsvps.$inferInsert)[] = [];
@@ -153,14 +164,19 @@ export async function loadDemo(db: DB) {
   }
   if (rs.length) await db.insert(S.rsvps).values(rs);
 
+  const GALLERIES: [string, string][][] = [
+    [[PHOTOS.coffee, "Chai, poems and rain on the window"], [PHOTOS.glasses, "Readers' picks on the poetry table"], [PHOTOS.couch, "A quiet corner between readings"], [PHOTOS.stack, ""]],
+    [[PHOTOS.openBooks, "Annotated copies everywhere"], [PHOTOS.circle, "The great Klara debate"], [PHOTOS.tableTalk, "Notes for next month"], [PHOTOS.holding, ""]],
+    [[PHOTOS.picking, "Choosing tonight's story"], [PHOTOS.bookTable, "The picture-book table"], [PHOTOS.armchair, "Story time"], [PHOTOS.shelves, ""]],
+  ];
   const past = [
-    { title: "Monsoon poetry evening", kind: "EVENT" as const, startsAt: at(-12, 18), description: "Readings in Hindi, Urdu and English by the window." },
-    { title: "Club night: Klara and the Sun", kind: "SESSION" as const, startsAt: at(-26, 18), capacity: 14, description: "Our last club read — the debate about Klara went well past closing time." },
-    { title: "Kids' story hour", kind: "EVENT" as const, startsAt: at(-40, 11), description: "Picture books, puppets and a very enthusiastic crowd." },
+    { title: "Monsoon poetry evening", kind: "EVENT" as const, imageUrl: PHOTOS.coffee, startsAt: at(-12, 18), description: "Readings in Hindi, Urdu and English by the window." },
+    { title: "Club night: Klara and the Sun", kind: "SESSION" as const, imageUrl: PHOTOS.openBooks, startsAt: at(-26, 18), capacity: 14, description: "Our last club read — the debate about Klara went well past closing time." },
+    { title: "Kids' story hour", kind: "EVENT" as const, imageUrl: PHOTOS.picking, startsAt: at(-40, 11), description: "Picture books, puppets and a very enthusiastic crowd." },
   ];
   for (const [i, e] of past.entries()) {
     const [ev] = await db.insert(S.events).values(e).returning();
-    await db.insert(S.eventPhotos).values(Array.from({ length: 4 }, (_, k) => ({ eventId: ev.id, url: scene(i + k, e.title), caption: k === 0 ? "Sample photo — replace from the staff desk" : "" })));
+    await db.insert(S.eventPhotos).values(GALLERIES[i].map(([url, caption]) => ({ eventId: ev.id, url, caption })));
     await db.insert(S.rsvps).values(members.slice(0, 6 + i).map((m) => ({ eventId: ev.id, memberId: m.id, status: "GOING" as const })));
   }
 

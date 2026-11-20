@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PageHead } from "@/components/ui";
+import { PHOTOS } from "@/lib/demo";
 import { and, asc, count, desc, eq, gt, ilike, or, sum, type SQL } from "drizzle-orm";
 import { db, books as booksT } from "@/lib/db";
 import { isAdmin } from "@/lib/session";
@@ -30,10 +32,9 @@ export default async function Inventory({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <div className="head">
-        <div><h1>Store inventory</h1><p>{totals.titles} titles · {totals.copies ?? 0} copies on the shelves. Search by title, author or ISBN.</p></div>
-        {admin && <Link className="btn small" href="/admin#book">Add a book</Link>}
-      </div>
+      <PageHead image={PHOTOS.stack} title="Store inventory" sub={`${totals.titles} titles · ${totals.copies ?? 0} copies on the shelves. Search by title, author or ISBN.`}>
+        {admin && <Link className="btn" href="/admin#book">Add a book</Link>}
+      </PageHead>
 
       <form className="card row" style={{ marginBottom: 18 }}>
         <input name="q" defaultValue={q} placeholder="Search title, author, ISBN" aria-label="Search" style={{ flex: "2 1 220px", width: "auto" }} />
@@ -48,7 +49,7 @@ export default async function Inventory({ searchParams }: { searchParams: Promis
         <button className="btn small">Filter</button>
       </form>
 
-      <div className="scroll">
+      <div className="card table-card scroll">
         <table className="stack-t">
           <thead><tr><th></th><th>Title</th><th>Author</th><th>Genre</th><th>Shelf</th><th className="num">Price</th><th className="num">Stock</th>{admin && <th></th>}</tr></thead>
           <tbody>

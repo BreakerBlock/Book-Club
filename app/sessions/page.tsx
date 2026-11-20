@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PageHead } from "@/components/ui";
+import { PHOTOS } from "@/lib/demo";
 import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 import { db, events } from "@/lib/db";
 import { currentMember } from "@/lib/session";
@@ -22,25 +24,23 @@ export default async function Sessions() {
 
   return (
     <>
-      <div className="head">
-        <div>
-          <h1>Sessions &amp; RSVP</h1>
-          <p>Say you&rsquo;re going to save a seat, or mark &ldquo;interested&rdquo; so we know which sessions to run more of.</p>
-        </div>
-        {me && <span className="pill">You&rsquo;re on {myCount} upcoming</span>}
-      </div>
+      <PageHead image={PHOTOS.holding} title="Sessions & RSVP" sub="Say you’re going to save a seat, or mark “interested” so we know which sessions to run more of.">
+        {me && <span className="pill gold">You’re on {myCount} upcoming</span>}
+      </PageHead>
 
       <div className="stack">
         {upcoming.length === 0 && <p className="soft">Nothing scheduled yet — check back soon.</p>}
         {upcoming.map((e) => (
-          <article key={e.id} className="card row" style={{ alignItems: "flex-start", flexWrap: "nowrap", gap: 16 }}>
-            <div className="date-badge"><b>{day.format(e.startsAt)}</b><span>{mon.format(e.startsAt)}</span></div>
-            <div style={{ flex: 1 }}>
+          <article key={e.id} className="card session">
+            <div className="ev-img" style={e.imageUrl ? { backgroundImage: `url(${e.imageUrl})` } : undefined}>
+              <div className="when date-badge"><b>{day.format(e.startsAt)}</b><span>{mon.format(e.startsAt)}</span></div>
+            </div>
+            <div className="ev-body">
               <div className="row" style={{ gap: 6 }}>
                 <span className={`pill ${e.kind === "SESSION" ? "hot" : ""}`}>{e.kind === "SESSION" ? "Club session" : "Store event"}</span>
                 <span className="soft small">{dateTime(e.startsAt)} · {e.location}</span>
               </div>
-              <h3 style={{ marginTop: 8 }}><Link href={`/events/${e.id}`}>{e.title}</Link></h3>
+              <h3><Link href={`/events/${e.id}`} style={{ textDecoration: "none" }}>{e.title}</Link></h3>
               {e.description && <p className="small">{e.description}</p>}
               <RsvpBlock eventId={e.id} rsvps={e.rsvps} capacity={e.capacity} meId={me?.id} past={false} />
             </div>
@@ -53,9 +53,12 @@ export default async function Sessions() {
           <h2>Past sessions</h2>
           <div className="grid">
             {past.map((e) => (
-              <Link key={e.id} href={`/events/${e.id}`} className="card" style={{ textDecoration: "none" }}>
-                <b>{e.title}</b>
-                <div className="soft small">{dateTime(e.startsAt)} · {e.rsvps.filter((r) => r.status === "GOING").length} attended</div>
+              <Link key={e.id} href={`/events/${e.id}`} className="card ev lift">
+                <div className="ev-img" style={e.imageUrl ? { backgroundImage: `url(${e.imageUrl})` } : undefined} />
+                <div className="ev-body">
+                  <b>{e.title}</b>
+                  <span className="soft small">{dateTime(e.startsAt)} · {e.rsvps.filter((r) => r.status === "GOING").length} attended</span>
+                </div>
               </Link>
             ))}
           </div>

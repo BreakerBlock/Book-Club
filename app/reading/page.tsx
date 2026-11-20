@@ -1,9 +1,11 @@
 import { asc, count, desc, eq, isNotNull } from "drizzle-orm";
+import { PHOTOS } from "@/lib/demo";
 import { db, readingLogs, books as booksT } from "@/lib/db";
 import { currentMember } from "@/lib/session";
 import { logReading, deleteLog } from "@/lib/actions";
 import { ActionForm, Submit } from "@/components/ActionForm";
-import { Cover, Stars, JoinPrompt } from "@/components/Cover";
+import { Cover } from "@/components/Cover";
+import { Stars, JoinPrompt, PageHead } from "@/components/ui";
 import { ago, initials } from "@/lib/format";
 
 export const metadata = { title: "Reading log & reviews" };
@@ -27,9 +29,7 @@ export default async function Reading({ searchParams }: { searchParams: Promise<
 
   return (
     <>
-      <div className="head">
-        <div><h1>What the club is reading</h1><p>Log what you&rsquo;re on, what you finished and what you thought. Ratings power everyone&rsquo;s suggestions.</p></div>
-      </div>
+      <PageHead image={PHOTOS.armchair} title="What the club is reading" sub="Log what you’re on, what you finished and what you thought. Ratings power everyone’s suggestions." />
       <div className="split">
         <section>
           <div className="row" style={{ marginBottom: 8 }}>

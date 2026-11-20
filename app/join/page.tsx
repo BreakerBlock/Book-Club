@@ -1,11 +1,14 @@
 import { ActionForm, Submit } from "@/components/ActionForm";
 import { join } from "@/lib/actions";
+import { redirect } from "next/navigation";
 import { storeName } from "@/lib/settings";
+import { DEMO } from "@/lib/mode";
 
 export const metadata = { title: "Join the club" };
 
 export default async function Join({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next = "/" } = await searchParams;
+  if (DEMO) redirect("/");
   const STORE_NAME = await storeName();
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
   return (

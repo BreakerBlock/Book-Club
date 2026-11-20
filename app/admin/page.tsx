@@ -6,6 +6,7 @@ import { isAdmin } from "@/lib/session";
 import { ActionForm, Submit } from "@/components/ActionForm";
 import { saveBook, saveEvent, addPhotos, addPrize, adminLogout, deleteEvent, saveShop, changeStaffPassword, loadDemoData } from "@/lib/actions";
 import { storeName } from "@/lib/settings";
+import { DEMO } from "@/lib/mode";
 import { dateTime } from "@/lib/format";
 
 export const metadata = { title: "Staff desk" };
@@ -28,7 +29,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
     <>
       <div className="head">
         <div><h1>Staff desk</h1><p>{members} members · {stock ?? 0} books in stock · {low} titles running low</p></div>
-        <form action={adminLogout}><button className="btn ghost small">Sign out of staff</button></form>
+        {!DEMO && <form action={adminLogout}><button className="btn ghost small">Sign out of staff</button></form>}
       </div>
 
       <section className="card" style={{ marginBottom: 28 }}>
@@ -38,7 +39,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
             <label>Shop name<input name="storeName" defaultValue={name} required /></label>
             <Submit>Save name</Submit>
           </ActionForm>
-          {!process.env.ADMIN_PASSWORD && (
+          {!DEMO && !process.env.ADMIN_PASSWORD && (
             <ActionForm action={changeStaffPassword}>
               <label>New staff password<input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
               <Submit>Change password</Submit>

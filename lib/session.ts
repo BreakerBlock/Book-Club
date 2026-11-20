@@ -4,6 +4,8 @@ import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { eq } from "drizzle-orm";
 import { db, members } from "./db";
 import { databaseUrl } from "./dburl";
+import { DEMO } from "./mode";
+import { cache } from "react";
 
 // SESSION_SECRET if set; otherwise derived from the database password, which is already secret.
 const SECRET = process.env.SESSION_SECRET
@@ -33,7 +35,15 @@ export async function setMember(id: string) {
 export async function clearMember() {
   (await cookies()).delete(MEMBER);
 }
+/** In demo mode everyone shares one member account, created on first use. */
+const guest = cache(async () => {
+  const [m] = await db.insert(members).values({ name: "Guest Reader", email: "guest@demo.local" })
+    .onConflictDoUpdate({ target: members.email, set: { name: "Guest Reader" } }).returning();
+  return m;
+});
+
 export async function currentMember() {
+  if (DEMO) return guest();
   const id = unsign((await cookies()).get(MEMBER)?.value);
   if (!id) return null;
   return (await db.query.members.findFirst({ where: eq(members.id, id) })) ?? null;
@@ -51,6 +61,7 @@ export async function clearAdmin() {
   (await cookies()).delete(ADMIN);
 }
 export async function isAdmin() {
+  if (DEMO) return true;
   return unsign((await cookies()).get(ADMIN)?.value) === "admin";
 }
 export async function requireAdmin() {

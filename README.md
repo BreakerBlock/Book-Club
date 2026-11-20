@@ -29,7 +29,11 @@ Each pick shows the reason it was chosen. New members with no log see club favou
 
 **Trending** = reading activity in the last 30 days (started/finished/want), adjusted by star ratings, plus net pitch votes.
 
-## Sign-in model
+## Demo mode (on by default)
+For pitching, the site runs with **no login screens**: every visitor is the shared "Guest Reader" member with staff access, and an empty database is filled with demo data on deploy.
+**Before the shop goes live:** Vercel → Settings → Environment Variables → add `DEMO_MODE` = `off`, then redeploy. Then set the staff password at `/admin/login` and clear the demo data.
+
+## Sign-in model (when DEMO_MODE=off)
 - **Members** join with name + email (no password). A signed cookie keeps them in for a year. Set `CLUB_JOIN_CODE` so only people who got the code at the counter can join.
 - **Staff**: the first time anyone opens `/admin/login`, it asks them to choose the staff password (stored hashed in the database). After that it's a normal login. Change it any time under *Shop settings* on the staff desk. Setting an `ADMIN_PASSWORD` env var overrides this.
 

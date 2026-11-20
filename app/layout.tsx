@@ -7,6 +7,7 @@ import { currentMember, isAdmin } from "@/lib/session";
 import { leave } from "@/lib/actions";
 import { initials } from "@/lib/format";
 import { storeName } from "@/lib/settings";
+import { DEMO } from "@/lib/mode";
 
 export async function generateMetadata(): Promise<Metadata> {
   const name = await storeName();
@@ -38,7 +39,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Link>
             <div className="who">
               {admin && <Link className="pill staff" href="/admin">Staff</Link>}
-              {me ? (
+              {DEMO && me ? (
+                <span className="me">
+                  <span className="avatar" title={me.name}>{initials(me.name)}</span>
+                  <span className="hide-sm">{me.name}</span>
+                </span>
+              ) : me ? (
                 <form action={leave} className="me">
                   <span className="avatar" title={me.name}>{initials(me.name)}</span>
                   <span className="hide-sm">{me.name.split(" ")[0]}</span>
@@ -56,7 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <main>{children}</main>
         <footer className="foot">
           <span>{STORE_NAME} · Book club &amp; shop floor</span>
-          <Link href={admin ? "/admin" : "/admin/login"}>Staff login</Link>
+          <Link href={admin ? "/admin" : "/admin/login"}>{admin ? "Staff desk" : "Staff login"}</Link>
         </footer>
       </body>
     </html>

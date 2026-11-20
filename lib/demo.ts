@@ -85,8 +85,11 @@ export async function loadDemo(db: DB) {
   const byTitle = new Map(books.map((b) => [b.title, b]));
   await db.insert(S.prizes).values(PRIZES.map(([t, name, year, category]) => ({ bookId: byTitle.get(t)!.id, name, year, category })));
 
-  const members = await db.insert(S.members).values(MEMBERS.map((name) =>
-    ({ name, email: name.toLowerCase().replace(/[^a-z]+/g, ".") + "@example.com" }))).returning();
+  const members = await db.insert(S.members).values([
+    // The shared demo-mode account goes first so it gets reading history, votes and RSVPs too.
+    { name: "Guest Reader", email: "guest@demo.local" },
+    ...MEMBERS.map((name) => ({ name, email: name.toLowerCase().replace(/[^a-z]+/g, ".") + "@example.com" })),
+  ]).returning();
 
   // Availability: weekends are popular, so a clear "best date" emerges.
   const avail: (typeof S.availability.$inferInsert)[] = [];
@@ -127,11 +130,11 @@ export async function loadDemo(db: DB) {
     ["The Emperor of All Maladies", "Siddhartha Mukherjee", "Non-fiction", "We haven't done non-fiction in months. This reads like a thriller and half of us have someone it touches."],
   ];
   for (const [k, [title, author, genre, reason]] of pitches.entries()) {
-    const [p] = await db.insert(S.pitches).values({ title, author, genre, reason, memberId: members[k * 2].id, createdAt: daysAgo(2 + k * 3) }).returning();
+    const [p] = await db.insert(S.pitches).values({ title, author, genre, reason, memberId: members[k * 2 + 1].id, createdAt: daysAgo(2 + k * 3) }).returning();
     const vs = members.filter(() => Math.random() < 0.75 - k * 0.12).map((m) => ({ pitchId: p.id, memberId: m.id, value: Math.random() < 0.88 ? 1 : -1 }));
     if (vs.length) await db.insert(S.votes).values(vs);
   }
-  await db.insert(S.pitches).values({ title: "Tomb of Sand", author: "Geetanjali Shree", genre: "Literary Fiction", status: "SELECTED", memberId: members[1].id, createdAt: daysAgo(25), reason: "An 80-year-old woman decides to cross the border and the prose does somersaults. Our first translated pick!" });
+  await db.insert(S.pitches).values({ title: "Tomb of Sand", author: "Geetanjali Shree", genre: "Literary Fiction", status: "SELECTED", memberId: members[2].id, createdAt: daysAgo(25), reason: "An 80-year-old woman decides to cross the border and the prose does somersaults. Our first translated pick!" });
 
   // Events & sessions
   const at = (offsetDays: number, hour: number) => { const d = new Date(Date.now() + offsetDays * day); d.setUTCHours(hour - 6, 30, 0, 0); return d; };

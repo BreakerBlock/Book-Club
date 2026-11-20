@@ -1,11 +1,14 @@
 import { ActionForm, Submit } from "@/components/ActionForm";
 import { adminLogin, adminSetup } from "@/lib/actions";
+import { redirect } from "next/navigation";
 import { staffPasswordMode } from "@/lib/settings";
+import { DEMO } from "@/lib/mode";
 
 export const metadata = { title: "Staff login" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminLogin() {
+  if (DEMO) redirect("/admin");
   const mode = await staffPasswordMode();
   return (
     <div style={{ maxWidth: 420, margin: "0 auto" }}>
